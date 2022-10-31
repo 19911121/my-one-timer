@@ -1,0 +1,40 @@
+{
+  "name": "my-one-timer",
+  "version": "1.0.0",
+  "description": "my one-timer",
+  "main": "./dist/my-one-timer.js",
+  "module": "./dist/es/my-one-timer.js",
+  "types": "./dist/my-one-timer.d.ts",
+  "source": "src/my-one-timer.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .ts",
+    "build": "rm -rf ./dist && gulp"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/19911121/my-one-timer.git"
+  },
+  "keywords": [
+    "timer",
+    "typescript timer",
+    "javascript timer",
+    "vue timer"
+  ],
+  "author": "19911121-minsoo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/19911121/my-one-timer/issues"
+  },
+  "homepage": "https://github.com/19911121/my-one-timer#readme",
+  "devDependencies": {
+    "@babel/core": "^7.19.6",
+    "@babel/preset-env": "^7.19.4",
+    "@babel/register": "^7.18.9",
+    "@rollup/plugin-typescript": "^9.0.2",
+    "csstype": "^3.1.1",
+    "gulp": "^4.0.2",
+    "rollup": "^3.2.3",
+    "tslib": "^2.4.0"
+  }
+}
