@@ -5,7 +5,7 @@
   "main": "./dist/my-one-timer.js",
   "module": "./dist/es/my-one-timer.js",
   "types": "./dist/my-one-timer.d.ts",
-  "source": "src/index.ts",
+  "source": "src/my-one-timer.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint . --ext .ts",
