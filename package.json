@@ -16,7 +16,10 @@
     "url": "git+https://github.com/19911121/my-one-timer.git"
   },
   "keywords": [
-    "timer"
+    "timer",
+    "typescript timer",
+    "javascript timer",
+    "vue timer"
   ],
   "author": "19911121-minsoo",
   "license": "ISC",
