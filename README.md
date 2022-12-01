@@ -34,13 +34,13 @@ myOneTimer.destroy();
   타이머 주기 마다 이벤트를 받습니다.
 
   - Listener
-  Type: `(timestamp: number) => void`  
+  Type: `(e: TimerEvent) => void`  
 
 - completed
   타이머가 완료 되면 이벤트를 받습니다.
 
   - Listener
-  Type: `(completed: boolean) => void`  
+  Type: `(e: CompletedEvent) => void`  
 
 ``` typescript
 myOneTimer.addEventListener(Props, Listener);

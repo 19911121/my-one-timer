@@ -2,103 +2,148 @@
  * MyOneTimer
  */
 
-type TimerCallBack = (timestamp: number) => void;
-type ComplatedCallBack = (completed: boolean) => void;
+interface CompletedEvent {
+  /** 이벤트 시작 timestamp */
+  startTimestamp: number;
+  /** 이벤트 발생 timestamp */
+  callTimestamp: number;
+  /** 오차 딜레이 */
+  errorDeley: number;
+}
+
+interface TimerEvent extends CompletedEvent {
+  /** 남은 timestamp */
+  timestamp: number;
+}
+
+type ComplatedFunction = (event: CompletedEvent) => void;
+type TimerFunction = (event: TimerEvent) => void;
 
 interface EventMap {
-  timer: TimerCallBack;
-  completed: ComplatedCallBack;
+  completed: ComplatedFunction;
+  timer: TimerFunction;
 };
 
-type Events = {
-  [key in keyof EventMap]: EventMap[key][];
+type Events<K extends keyof EventMap = keyof EventMap> = {
+  [key in K]: EventMap[key][];
 }
 
 class MyOneTimer {
-  private timer: ReturnType<typeof setInterval> | null = null;
+  private timer: ReturnType<typeof setTimeout> | null = null;
   private events: Events = {
-    timer: [],
     completed: [],
+    timer: [],
   };
 
   /** 타이머 진행 시간 */
   private timestamp = 0;
-  /** 타이머 진행 주기 */
-  private unit = 0;
 
+  /** 타이머 진행 주기 */
+  private delay = 0;
+
+  /** 반복 카운트 */
+  private loopCount = 0;
+
+  /** 누적 오차 딜레이 */
+  private cumulativeErrorDeley = 0;
+
+  /** 시작 시간 */
+  private startTimestamp = 0;
+  
   /**
    * @constructor MyOneTimer
    * 
    * @param timestamp - milliseconds
-   * @param unit - milliseconds
+   * @param delay - milliseconds
    */
-  constructor(timestamp: number, unit = 1) {
+  constructor(timestamp: number, delay = 1) {
+    // timestamp 체크
     if (0 >= timestamp) throw new RangeError('0보다 큰 숫자를 입력해 주세요.');
-    if (1 > unit) {
+
+    // delay 체크
+    if (1 > delay) {
       console.warn('타이머 주기가 1 milliseconds 보다 작아 1 milliseconds로 설정되었습니다.');
 
-      this.unit = 1;
+      this.delay = 1;
+    }
+    else {
+      this.delay = delay;
     }
     
-    this.unit = unit;
     this.timestamp = timestamp;
-    this.create();
+    this.loopCount = Math.ceil(timestamp / delay);
+    this.startTimestamp = Date.now();
+    this.start();
   }
-
+ 
   /**
-   * create timer
-   *
-   * @private
-   * @return {void}
+   * 타이머 시작
+   * 
+   * @param startTimestamp 실행 시점 timestamp
    */
-  private create() {
-    if (this.timer) this.dispose();
+  private start(count = 1) {
+    this.timer = setTimeout(() => {
+      const callTimestamp = Date.now();
+      const event: Pick<CompletedEvent, 'startTimestamp' | 'callTimestamp'> = {
+        startTimestamp: this.startTimestamp,
+        callTimestamp: callTimestamp,
+      };
 
-    this.timer = setInterval(() => {
-      this.timestamp -= this.unit;
+      this.cumulativeErrorDeley = callTimestamp - this.startTimestamp - (this.delay * count);
+      this.timestamp -= this.delay - this.cumulativeErrorDeley;
 
-      if (0 >= this.timestamp) {
+      if (this.loopCount === count) {
         this.timestamp = 0;
-        this.eventCall('timer');
-        this.eventCall('completed');
+
+        this.eventCall('timer', {
+          ...event,
+          timestamp: this.timestamp,
+          errorDeley: this.cumulativeErrorDeley,
+        });
+
+        this.eventCall('completed', {
+          ...event,
+          errorDeley: this.cumulativeErrorDeley,
+        });
+
         this.destroy();
-      } else {
-        this.eventCall('timer');
       }
-    }, this.unit);
+      else {
+        this.eventCall('timer', {
+          ...event,
+          timestamp: this.timestamp,
+          errorDeley: this.cumulativeErrorDeley,
+        });
+
+        this.start(count + 1);
+      }
+    }, this.delay - this.cumulativeErrorDeley);
   }
 
   /**
    * dispose timer
-   *
-   * @private
-   * @return {void}
    */
   private dispose() {
-    if (this.timer) clearInterval(this.timer);
+    if (this.timer) {
+      clearTimeout(this.timer);
+
+      this.timestamp = 0;
+      this.delay = 0;
+      this.loopCount = 0;
+      this.cumulativeErrorDeley = 0;
+      this.startTimestamp = 0;
+    }
   }
 
   /**
    * callback 이벤트 호출
-   *
-   * @private
-   * @param {string} name
-   * @return {void}
+   * 
+   * @param name 
+   * @param args 
    */
-  private eventCall(name: string) {
-    switch (name) {
-      case 'timer':
-        for (const cb of this.events.timer) {
-          cb(this.timestamp);
-        }
-
-        break;
-      case 'completed':
-        for (const cb of this.events.completed) {
-          cb(true);
-        }
-
-        break;
+  private eventCall<K extends keyof EventMap>(name: K, payload: Parameters<EventMap[K]>[number]) {
+    for (const cb of this.events[name]) {
+      cb(payload as any);
     }
   }
 
